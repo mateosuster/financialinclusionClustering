@@ -46,7 +46,7 @@ df_com_mice_lr.columns = data_all.columns
 df_com_mice_lr['imputer'] = 'MICE-LinearRegression'
 
 rf =  RandomForestRegressor()
-imp_rf = IterativeImputer(estimator=lr,missing_values=np.nan, max_iter=10, verbose=2, imputation_order='roman',random_state=0)
+imp_rf = IterativeImputer(estimator=rf,missing_values=np.nan, max_iter=10, verbose=2, imputation_order='roman',random_state=0)
 df_imp_mice_rf = imp_rf.fit_transform(data)
 df_com_mice_rf = pd.concat([index.reset_index(drop=True), pd.DataFrame(df_imp_mice_rf).reset_index(drop=True) ], axis =1, ignore_index= True)
 df_com_mice_rf.columns = data_all.columns
@@ -54,7 +54,7 @@ df_com_mice_rf['imputer'] = 'MICE-RandomForest'
 
 # https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.BayesianRidge.html#sklearn.linear_model.BayesianRidge
 br = BayesianRidge() 
-imp_br = IterativeImputer(estimator=lr,missing_values=np.nan, max_iter=10, verbose=2, imputation_order='roman',random_state=0)
+imp_br = IterativeImputer(estimator=br,missing_values=np.nan, max_iter=10, verbose=2, imputation_order='roman',random_state=0)
 df_imp_mice_br = imp_br.fit_transform(data)
 df_com_mice_br = pd.concat([index.reset_index(drop=True), pd.DataFrame(df_imp_mice_br).reset_index(drop=True) ], axis =1, ignore_index= True)
 df_com_mice_br.columns = data_all.columns
@@ -72,4 +72,4 @@ df_com_knn['imputer'] = 'KNN'
 # Concat
 pd.concat([ df_com_avg, df_com_med,
            df_com_mice_lr, df_com_mice_br , df_com_mice_rf,
-           df_com_knn], axis=0).to_csv('results/data_imputada.csv', index = False)
+           df_com_knn], axis=0).to_csv('results/data_imputada_py.csv', index = False)

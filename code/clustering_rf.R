@@ -11,7 +11,7 @@ gc()             #garbage collection
 setwd('/home/mateo1/repos/financialinclusionClustering')
 
 #leo el dataset , aqui se puede usar algun super dataset con Feature Engineering
-dataset <- read.csv('results/data_imputada_2.csv') 
+dataset <- read.csv('results/data_imputada.csv') 
 glimpse(dataset)
 
 data = dataset[, 3:ncol(dataset) ]
@@ -26,6 +26,10 @@ rf_list = list()
 dist_list = list()
 hclust_list = list()
 sil_list = list()
+corr_coph = list()
+
+df_corr_coph <- data.frame(imputer = numeric(0),    # Create empty data frame
+                           corr_coph = numeric(0) )
 
 df_sil <- data.frame(matrix(ncol = 3, nrow = 0))
 colnames(df_sil) <- c("imputer", "ncluster", "avg_sil")
@@ -49,6 +53,8 @@ for(imputer_i in unique(data$imputer)){
   hclust.rf  <- hclust( dist_mtrx,
                         method= "ward.D2" )
   
+  
+  
   for (nclust in c(2:15)){
     print(nclust)
     rf.cluster  <- cutree( hclust.rf, nclust) #corto los arboles
@@ -65,10 +71,18 @@ for(imputer_i in unique(data$imputer)){
   hclust_list[[imputer_i]] = hclust.rf
   # sil_list[[imputer_i]] = df_sil
   
+  
+  df_corr_coph[nrow(df_corr_coph)+1, ] <- c(imputer_i  , cor(cophenetic(hclust.rf), dist_mtrx) ) 
   # df_sil <- data.frame(matrix(ncol = 3, nrow = 0))
   # colnames(df_sil) <- c("imputer", "ncluster", "avg_sil")
   
 }
+
+# corr cofenética
+df_corr_coph <- df_corr_coph %>%
+  mutate(corr_coph = as.double(corr_coph)) %>% 
+  arrange(-corr_coph)
+write_delim(df_corr_coph, file = "results/cophenetic_corr.csv", delim = "&")
 
 #grafico silhoutte
 df_sil %>% 
@@ -78,6 +92,8 @@ df_sil %>%
   theme(legend.position = 'bottom')+
   labs(y = 'Silhouette promedio', x = 'Cantidad de clústers')
 ggsave(filename = 'results/sil_avg.jpg')
+
+
 
 
 # cluster plot for max sil
