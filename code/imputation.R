@@ -53,7 +53,8 @@ for (i in names(data_imp[, 4:ncol(data_imp) ])) {
               theme(legend.position = 'none', 
                     axis.title = element_blank()) 
     )  
-    ggsave(paste0('results/dist_imp/dist_',i,'.jpg' ))
+    ggsave(paste0('results/dist_imp/dist_',i,'.jpg' ),
+           height = 4, width = 4)
     
   }
 }
