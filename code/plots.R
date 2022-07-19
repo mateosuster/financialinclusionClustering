@@ -49,7 +49,6 @@ data %>%
 
 # Missing paterns
 country_all_na = data %>% 
-
   filter_at(vars(4:ncol(data)), all_vars(is.na(.)))
   # filter_at(vars(4:ncol(data)), all_vars( !complete.cases(.) ) )
 country_all_na$Country.Code
@@ -58,6 +57,8 @@ data = data %>%
   filter(!Country.Code %in% country_all_na$Country.Code)
 
 na_plot =aggr(data[,4:ncol(data)], sortVar=TRUE, oma = c(16, 5, 5, 3), numbers=T)
+# ggsave(na_plot$percent, 'results/missings_combinations.jpg')
+na_plot$missings
 summary(na_plot)
 
 md.pattern(data[,4:ncol(data)], rotate.names=TRUE)
