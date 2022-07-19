@@ -3,6 +3,7 @@ require(ggplot2)
 require(GGally)
 require(VIM)
 library(mice) # Cargamos la librería
+library(xtable)
 
 #wd
 # setwd('/home/mateo1/repos/financialinclusionClustering')
@@ -12,16 +13,43 @@ setwd('C:/Users/mateo/Documents/repos/financialinclusionClustering')
 dataset = read.csv("data/data.csv")
 data = dataset[ dataset$year == 2021,]
 
+col_nam = names(data[,4:ncol(data)])
+
 # EDA
 glimpse(data)
 nrow(data[!complete.cases(data),])
 
-summary(data)
-boxplot(data[,4:ncol(data)])
+mySummary <- function(vector, na.rm = T, round = 2){
+  results <- c('Std. Dev' = round(sd(unlist(vector), na.rm), round), summary(vector))
+  return(results)
+}
+
+# summ_df  = do.call(cbind, lapply(data[,4:ncol(data)], summary))
+summ_df  = do.call(cbind, lapply(data[,4:ncol(data)], mySummary))
+
+print(xtable(summ_df), include.rownames = T)
+
+
+# boxplot
+data %>% 
+  select(col_nam) %>%
+  stack() %>% 
+  # ggplot(aes(x = ind, y = values)) +
+  ggplot(aes(x = reorder(ind, values, FUN = median,na.rm = TRUE, decreasing = T), y = values)) +
+  # ggplot(aes(x = fct_reorder(ind, values, fun = median,na.rm = TRUE, .desc =TRUE), y = values)) +
+  geom_boxplot()+
+  theme(axis.text.x = element_text( angle=45, hjust = 1),
+        axis.title  = element_blank(),
+        legend.position = 'none')
+ggsave('results/boxplot.jpg')
+
+data %>% 
+  # summarise_all(sd, na.rm=T)
+  summarise(sd= sd, na.rm=T)
 
 # Missing paterns
 country_all_na = data %>% 
-  # select(4:ncol(data)) %>% 
+
   filter_at(vars(4:ncol(data)), all_vars(is.na(.)))
   # filter_at(vars(4:ncol(data)), all_vars( !complete.cases(.) ) )
 country_all_na$Country.Code
@@ -47,7 +75,7 @@ lowerfun <- function(data,mapping){
 
 # Corr plot
 # Matrix of plots
-p1 <- ggpairs(data = data, columns = 4:ncol(data)  , na.omit = TRUE ,
+p1 <- ggpairs(data = data, columns = 4:ncol(data)  , #na.omit = TRUE ,
               # lower = list(continuous = "smooth")
               lower = list(continuous = wrap(lowerfun)),
               diag = list(continuous = "barDiag") )
@@ -55,10 +83,6 @@ p1 <- ggpairs(data = data, columns = 4:ncol(data)  , na.omit = TRUE ,
   # theme(axis.text=element_blank())+
   # theme_minimal(base_size = 9)
 
-p1 <- ggpairs(data = data, columns = 4:ncol(data)  , na.omit = TRUE 
-              , lower = list(continuous = "smooth"),
-              diag = list(continuous = "barDiag")
-              )
 
 p2 <- ggcorr(data[,4:ncol(data) ], label = TRUE, label_round = 2)
 g2 <- ggplotGrob(p2)
