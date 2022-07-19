@@ -41,7 +41,7 @@ data %>%
   theme(axis.text.x = element_text( angle=45, hjust = 1),
         axis.title  = element_blank(),
         legend.position = 'none')
-ggsave('results/boxplot.jpg')
+ggsave('results/boxplot.jpg',    width = 4, height = 4)
 
 data %>% 
   # summarise_all(sd, na.rm=T)
