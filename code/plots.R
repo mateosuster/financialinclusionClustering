@@ -38,8 +38,9 @@ data %>%
   ggplot(aes(x = reorder(ind, values, FUN = median,na.rm = TRUE, decreasing = T), y = values)) +
   # ggplot(aes(x = fct_reorder(ind, values, fun = median,na.rm = TRUE, .desc =TRUE), y = values)) +
   geom_boxplot()+
+  labs(y = '%')+
   theme(axis.text.x = element_text( angle=45, hjust = 1),
-        axis.title  = element_blank(),
+        axis.title.x   = element_blank(),
         legend.position = 'none')
 ggsave('results/boxplot.jpg',    width = 4, height = 4)
 
@@ -48,6 +49,15 @@ data %>%
   summarise(sd= sd, na.rm=T)
 
 # Missing paterns
+dataset %>%
+  pivot_longer(col_nam) %>% 
+  group_by(Country.Name) %>%
+  summarise_each(funs(sum(is.na(.))/length(.))) %>% 
+  top_n(n = 20, wt = value) %>% 
+  ggplot(aes(reorder(Country.Name, value,decreasing=T ), value))+
+  geom_col()+
+  theme(axis.text.x = element_text( angle=45, vjust = 0.5))
+
 country_all_na = data %>% 
   filter_at(vars(4:ncol(data)), all_vars(is.na(.)))
   # filter_at(vars(4:ncol(data)), all_vars( !complete.cases(.) ) )
