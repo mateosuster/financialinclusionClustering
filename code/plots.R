@@ -10,6 +10,7 @@ library(xtable)
 setwd('C:/Users/mateo/Documents/repos/financialinclusionClustering')
 
 #data
+countries = read.csv("data/FINDEXCountry.csv")
 dataset = read.csv("data/data.csv")
 data = dataset[ dataset$year == 2021,]
 
@@ -50,13 +51,20 @@ data %>%
 
 # Missing paterns
 dataset %>%
+  left_join(countries[, c("Country.Code", 'Region') ], by = 'Country.Code' ) %>% 
   pivot_longer(col_nam) %>% 
-  group_by(Country.Name) %>%
+  group_by(Region) %>%
   summarise_each(funs(sum(is.na(.))/length(.))) %>% 
-  top_n(n = 20, wt = value) %>% 
-  ggplot(aes(reorder(Country.Name, value,decreasing=T ), value))+
+  # top_n(n = 20, wt = value) %>% 
+  # ggplot(aes(reorder(Country.Name, value,decreasing=T ), value))+
+  ggplot(aes(reorder(Region, value,decreasing=T ), value))+
   geom_col()+
-  theme(axis.text.x = element_text( angle=45, vjust = 0.5))
+  labs(y = '%')+
+  theme(axis.text.x = element_text( angle=45, hjust = 1),
+        axis.title.x   = element_blank(),
+        legend.position = 'none')
+ggsave('results/missings_x_region.jpg',
+       width = 4, height = 4)
 
 country_all_na = data %>% 
   filter_at(vars(4:ncol(data)), all_vars(is.na(.)))
