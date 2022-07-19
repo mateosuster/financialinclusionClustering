@@ -45,9 +45,6 @@ data %>%
         legend.position = 'none')
 ggsave('results/boxplot.jpg',    width = 4, height = 4)
 
-data %>% 
-  # summarise_all(sd, na.rm=T)
-  summarise(sd= sd, na.rm=T)
 
 # Missing paterns
 dataset %>%

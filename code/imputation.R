@@ -22,8 +22,8 @@ hotdeck_imp$imputer = 'HotDeck'
 data_imp = read.csv('results/data_imputada_py.csv') %>% 
   bind_rows(hotdeck_imp) %>% 
   bind_rows(data %>% 
-              na.omit() %>% 
-              mutate(imputer= 'Complete'))
+              # na.omit() %>% 
+              mutate(imputer= 'Sin imputación'))
 
 
 write.csv(data_imp, file = "results/data_imputada.csv", row.names = F)

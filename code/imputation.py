@@ -39,7 +39,7 @@ df_com_med['imputer'] = 'Mediana'
 # MICE
 start_time = time.time()
 lr = LinearRegression()
-imp_lr = IterativeImputer(estimator=lr,missing_values=np.nan, max_iter=1000, verbose=2, imputation_order='roman',max_value=1, min_value=0,random_state=0)
+imp_lr = IterativeImputer(estimator=lr,missing_values=np.nan, max_iter=100, verbose=2, imputation_order='roman',max_value=1, min_value=0,initial_strategy= 'median',random_state=0)
 df_imp_mice_lr=imp_lr.fit_transform(data)
 df_com_mice_lr = pd.concat([index.reset_index(drop=True), pd.DataFrame(df_imp_mice_lr).reset_index(drop=True) ], axis =1, ignore_index= True)
 df_com_mice_lr.columns = data_all.columns
@@ -50,7 +50,7 @@ print("LR", (end_time - start_time )/60)
 # RF
 start_time = time.time()
 rf =  RandomForestRegressor()
-imp_rf = IterativeImputer(estimator=rf,missing_values=np.nan, max_iter=1000, verbose=2, imputation_order='roman',max_value=1,min_value=0,random_state=0)
+imp_rf = IterativeImputer(estimator=rf,missing_values=np.nan, max_iter=100, verbose=2, imputation_order='roman',max_value=1,min_value=0,initial_strategy= 'median',random_state=0)
 df_imp_mice_rf = imp_rf.fit_transform(data)
 df_com_mice_rf = pd.concat([index.reset_index(drop=True), pd.DataFrame(df_imp_mice_rf).reset_index(drop=True) ], axis =1, ignore_index= True)
 df_com_mice_rf.columns = data_all.columns
@@ -62,7 +62,7 @@ print("RF", (end_time - start_time )/60)
 # https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.BayesianRidge.html#sklearn.linear_model.BayesianRidge
 start_time = time.time()
 br = BayesianRidge()
-imp_br = IterativeImputer(estimator=br,missing_values=np.nan, max_iter=1000, verbose=2, imputation_order='roman',max_value=1,min_value=0,random_state=0)
+imp_br = IterativeImputer(estimator=br,missing_values=np.nan, max_iter=100, verbose=2, imputation_order='roman',max_value=1,min_value=0,initial_strategy= 'median',random_state=0)
 df_imp_mice_br = imp_br.fit_transform(data)
 df_com_mice_br = pd.concat([index.reset_index(drop=True), pd.DataFrame(df_imp_mice_br).reset_index(drop=True) ], axis =1, ignore_index= True)
 df_com_mice_br.columns = data_all.columns
