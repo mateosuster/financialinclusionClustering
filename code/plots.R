@@ -1,59 +1,87 @@
-library(tidyverse)
-
-library(ggplot2)
-library(ggridges)
-
-library(VIM)
-# library(mice) # Cargamos la librería
+require(tidyverse)
+require(ggplot2)
+require(GGally)
+require(VIM)
+library(mice) # Cargamos la librería
 
 #wd
-setwd('/home/mateo1/repos/financialinclusionClustering')
+# setwd('/home/mateo1/repos/financialinclusionClustering')
+setwd('C:/Users/mateo/Documents/repos/financialinclusionClustering')
 
 #data
-data = read.csv("data/data.csv")
-data = data[ data$year == 2017,]
+dataset = read.csv("data/data.csv")
+data = dataset[ dataset$year == 2021,]
+
+# EDA
+glimpse(data)
+nrow(data[!complete.cases(data),])
+
+summary(data)
+boxplot(data[,4:ncol(data)])
+
+# Missing paterns
+country_all_na = data %>% 
+  # select(4:ncol(data)) %>% 
+  filter_at(vars(4:ncol(data)), all_vars(is.na(.)))
+  # filter_at(vars(4:ncol(data)), all_vars( !complete.cases(.) ) )
+country_all_na$Country.Code
+
+data = data %>% 
+  filter(!Country.Code %in% country_all_na$Country.Code)
+
+na_plot =aggr(data[,4:ncol(data)], sortVar=TRUE, oma = c(16, 5, 5, 3), numbers=T)
+summary(na_plot)
+
+md.pattern(data[,4:ncol(data)], rotate.names=TRUE)
+
+## ggally
+lowerfun <- function(data,mapping){
+  ggplot(data = data, mapping = mapping)+
+    geom_point(alpha = 0.5)+
+    scale_x_continuous(limits = c(0,1), breaks=c(0.25, 0.5, 0.75))+
+    scale_y_continuous(limits = c(0,1), breaks=c(0.25, 0.5, 0.75))+
+    geom_smooth(method = "loess")#+
+    # theme(axis.text.x = element_text( angle=45))
+}  
 
 
-# imputacion hot deck
-hotdeck_imp <-hotdeck(data  , imp_var =F)
-hotdeck_imp$imputer = 'HotDeck' 
+# Corr plot
+# Matrix of plots
+p1 <- ggpairs(data = data, columns = 4:ncol(data)  , na.omit = TRUE ,
+              # lower = list(continuous = "smooth")
+              lower = list(continuous = wrap(lowerfun)),
+              diag = list(continuous = "barDiag") )
+  # +theme_grey(base_size = 8)
+  # theme(axis.text=element_blank())+
+  # theme_minimal(base_size = 9)
 
+p1 <- ggpairs(data = data, columns = 4:ncol(data)  , na.omit = TRUE 
+              , lower = list(continuous = "smooth"),
+              diag = list(continuous = "barDiag")
+              )
 
-# levanto data from py
-data_imp = read.csv('results/data_imputada_py.csv') %>% 
-  bind_rows(hotdeck_imp) %>% 
-  bind_rows(data %>% 
-              na.omit() %>% 
-              mutate(imputer= 'Complete'))
-write.csv(data_imp, file = "results/data_imputada.csv")
+p2 <- ggcorr(data[,4:ncol(data) ], label = TRUE, label_round = 2)
+g2 <- ggplotGrob(p2)
+colors <- g2$grobs[[6]]$children[[3]]$gp$fill
 
-table(data_imp$imputer)
- 
-
-# PLOTSSS
-# https://cran.r-project.org/web/packages/ggridges/vignettes/introduction.html#:~:text=The%20ggridges%20package%20provides%20two,then%20draws%20those%20using%20ridgelines.
-# scale = 5, substantial overlap
-
-for (i in names(data_imp[, 4:ncol(data_imp) ])) {
-  print(i) 
-  if (i != 'imputer'){
-    print ( data_imp %>% 
-              ggplot(aes(x = data_imp[,i], y = imputer, fill = imputer )) + 
-              geom_density_ridges(
-                scale = 2,
-                quantiles = 4,
-                quantile_lines = TRUE,   vline_size = 0.5, vline_color = "red",
-                alpha = .5
-                , jittered_points = TRUE, point_alpha = 0.3
-              ) + 
-              # scale_point_color_hue(l = 40) +
-              # scale_discrete_manual(aesthetics = "point_shape", values = c(21, 22, 23, 24, 25))+
-              labs()+
-              theme(legend.position = 'none', 
-                    axis.title = element_blank()) 
-    )  
-    ggsave(paste0('results/dist_imp/dist_',i,'.jpg' ))
-    
+# Change background color to tiles in the upper triangular matrix of plots 
+idx <- 1
+p <- ncol(data[,4:ncol(data) ] )
+for (k1 in 1:(p-1)) {
+  for (k2 in (k1+1):p) {
+    plt <- getPlot(p1,k1,k2) +
+      theme(panel.background = element_rect(fill = colors[idx], color="white"),
+            panel.grid.major = element_line(color=colors[idx]))
+    p1 <- putPlot(p1,plt,k1,k2)
+    idx <- idx+1
   }
 }
+
+print(p1+ theme(strip.placement = "outside", text = element_text(size = 9)))
+ggsave("results/ggpair.jpg",
+       width = 10, height = 10)
+
+
+
+
 

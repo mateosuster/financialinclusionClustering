@@ -3,8 +3,8 @@ import wbdata
 import pandas as pd
 import os
 
-# os.chdir("C:/Users/mateo/Documents/repos/financialinclusionClustering")
-os.chdir('/home/mateo1/repos/financialinclusionClustering')
+os.chdir("C:/Users/mateo/Documents/repos/financialinclusionClustering")
+# os.chdir('/home/mateo1/repos/financialinclusionClustering')
 
 # rcParams['figure.figsize'] = 40, 12
 
@@ -23,28 +23,37 @@ os.chdir('/home/mateo1/repos/financialinclusionClustering')
 
 
 # levanto datasets
-series = pd.read_csv("data/FINDEXSeries.csv")
+series = pd.read_csv("data/FINDEXSeries.csv").sort_values(by="Indicator Name", ascending=True)
 countries = pd.read_csv("data/FINDEXCountry.csv")
 raw_data= pd.read_csv("data/FINDEXData.csv")
 
 # selecciono variables
 var_dict = {
              #indicadores de acceso y uso de servicios financieros
-             "account.t.d" :"account", # Account
-             "fin1.t.a": "fin_account", #Financial institution account
-             "fin17a.t.a": "saved_fin_acc", #Saved at a financial institution (% age 15+)
-             "fin22a.t.d": "borrowed_fin_acc", #Borrowed from a financial institution or used a credit card (% age 15+)
+               # Acceso
+            # "account.t.d" :"account", # Account
+            "fin1.t.d": "fin_account", #Financial institution account
+            # aditional variables
 
-             #aditional variables
-             "fin18.t.d": "saved_any_money", #Saved any money in the past year (% age 15+)
-             "fin23.t.d": "borrowed_any_money", #Borrowed any money in the past year (% age 15+)
-             # "fin2.t.a", #Debit card ownership
-             "fin4.t.a" :"debit_card_purch", #Debit card used to make a purchase in the past year (% age 15+)
-             # "fin7.t.a", #Credit card ownership (% age 15+)
-             "fin8.t.a": "credit_card_purch", #Credit card used in the past year (% age 15+)
-             }
+            # "fin2.t.a", #Debit card ownership
+           # "fin4.t": "debit_c_purch",  # Used a Debit card  to make a purchase in the past year (% age 15+)
+            # "fin7.t.a", #Credit card ownership (% age 15+)
+           "fin8.t": "credit_c_purch",  # Credit card used in the past year (% age 15+)
+            "mobileaccount.t.d": "mm_account",  # Mobile money account %
 
+             # Usage
+            "borrow.any": "borrow_any",  # Borrowed any money in the past year (% age 15+)
+            "save.any": "save_any",  # Saved any money in the past year (% age 15+)
+        #   "fin22a.c.t.d": "borrow_fin_acc", #Borrowed from a formal financial institution  (% age 15+)
+            "fin17a.t.d": "save_fin_acc",  # Saved at a financial institution (% age 15+)
 
+        # barriers
+            "fin11c": "lack_doc", # No account because of lack of necessary documentation
+        "fin11a.s": "distance", # No account because financial institions are too far
+        # "fin10.1a": "distance", # Reason for not using their inactive account: bank or financial institution is too far away (% with an inactive account, age 15+)
+        "fin11d": "lack_trust", # No account because of lack of trust
+        # "fin10.1e": "lack_trust", # Reason for not using their inactive account: don't trust banks or financial institutions (% age 15+)
+}
 
 var_list = list(var_dict.keys())
 gender_variables= []
@@ -66,34 +75,21 @@ var_desc = series[series["Series Code"].isin(var_list)] #desclasificador de vari
 
 
 #preprocesamiento
-pre_data = raw_data.drop(["Unnamed: 7"], axis=1).\
-    melt(id_vars = ["Country Name", "Country Code","Indicator Name", "Indicator Code"], value_vars = ["2011", "2014", "2017"], var_name="year")  # rotacion de la tabla
+pre_data = raw_data.drop(["Unnamed: 8"], axis=1).\
+    melt(id_vars = ["Country Name", "Country Code","Indicator Name", "Indicator Code"],
+         value_vars = ["2011", "2014", "2017", "2021"],
+         var_name="year")  # rotacion de la tabla
 
 ## seleccion de variables y filtro de regiones
 filter_data = pre_data[(pre_data["Indicator Code"].isin( var_list)) &(pre_data["Country Code"].isin(countries.loc[countries["Region"].notnull() , "Country Code"].values)) ]
 
+
 # dataset final
+dataset = filter_data.drop("Indicator Name", axis=1).pivot(index = ["Country Name", "Country Code", "year"] ,
+                                                        columns = "Indicator Code",
+                                                        values ="value") /100 #.reset_index()
 # data = filter_data.drop("Indicator Code", axis=1).pivot(index = ["Country Name", "Country Code", "year"] , columns = "Indicator Name", values ="value")#.reset_index()
-data = filter_data.drop("Indicator Name", axis=1).pivot(index = ["Country Name", "Country Code", "year"] , columns = "Indicator Code", values ="value")#.reset_index()
-data.rename(columns = var_dict,inplace=True)
+dataset.rename(columns = var_dict,inplace=True)
 
-data.to_csv("data/data.csv") #exportacion de dataset
+dataset.to_csv("data/data.csv", index=True) #exportacion de dataset
 
-
-data_parcial = pre_data[(pre_data['Indicator Code'].isin(['fin1.t.a.1',
-                                                          'fin1.t.a.2',
-                                                          'fin18.t.d.1',
-                                                          'fin18.t.d.2'])) 
-                        &(pre_data["Country Code"].isin(countries.loc[countries["Region"].notnull() , "Country Code"].values))]
-
-data_parcial= pd.merge(data_parcial, countries[["Country Code", "Region"]] , how ="left", on = "Country Code")
-
-x = data_parcial.pivot(index = ['Region', 'Country Name', 'Country Code', 'year'] , 
-                   columns = 'Indicator Name', 
-                   values = 'value')
-
-x.to_csv('/home/mateo1/docencia/data_parcial_2.csv')
-
-data_parcial.info()
-
-len(pd.unique(data_parcial['Country Name']))
