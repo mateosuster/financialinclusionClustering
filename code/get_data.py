@@ -41,15 +41,16 @@ var_dict = {
            "fin8.t": "credit_c_purch",  # Credit card used in the past year (% age 15+)
             "mobileaccount.t.d": "mm_account",  # Mobile money account %
 
-             # Usage
-            "borrow.any": "borrow_any",  # Borrowed any money in the past year (% age 15+)
-            "save.any": "save_any",  # Saved any money in the past year (% age 15+)
-        #   "fin22a.c.t.d": "borrow_fin_acc", #Borrowed from a formal financial institution  (% age 15+)
-            "fin17a.t.d": "save_fin_acc",  # Saved at a financial institution (% age 15+)
+         # Usage
+        "borrow.any": "borrow_any",  # Borrowed any money in the past year (% age 15+)
+        "save.any": "save_any",  # Saved any money in the past year (% age 15+)
+    #   "fin22a.c.t.d": "borrow_fin_acc", #Borrowed from a formal financial institution  (% age 15+)
+        "fin17a.t.d": "save_fin_acc",  # Saved at a financial institution (% age 15+)
 
         # barriers
-            "fin11c": "lack_doc", # No account because of lack of necessary documentation
-        "fin11a.s": "distance", # No account because financial institions are too far
+         "fin11c": "lack_doc", # No account because of lack of necessary documentation
+        # "fin11a.s": "distance", # No account because financial institions are too far
+        "fin11a": "distance", # No account because financial institions are too far
         # "fin10.1a": "distance", # Reason for not using their inactive account: bank or financial institution is too far away (% with an inactive account, age 15+)
         "fin11d": "lack_trust", # No account because of lack of trust
         # "fin10.1e": "lack_trust", # Reason for not using their inactive account: don't trust banks or financial institutions (% age 15+)
