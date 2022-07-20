@@ -94,7 +94,7 @@ findex_df =data.frame(cbind("Country.Name" =
                               dataset[dataset$imputer== "MICE-BayesianRidge", "Country.Name"],  
                             "Findex"=  
                               as.double(rowSums(wcp_df)/sum(autovalores_corr)) )) %>% 
-  mutate(Findex =as.double(Findex))
+  mutate(Findex =as.double(Findex) *-1 )
                 
 findex_df %>% arrange(-Findex)
 

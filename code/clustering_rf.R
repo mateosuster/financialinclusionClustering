@@ -152,7 +152,7 @@ Nb_list[['Complete']]$All.index
 
 
 # cluster plot for max sil
-optimal_cluster = 3
+optimal_cluster = 2
 data$cluster = NA
 cut_clust_list = list()
 # for (cluster_method in  hclust_list ){
@@ -212,7 +212,8 @@ avg_clust  = data_all %>%
   reshape2::melt(id.var = 'cluster') %>% 
   pivot_wider(names_from = 'cluster') #%>% 
   # dplyr::arrange('3')
-avg_clust = avg_clust[order(avg_clust[,"3"], decreasing = T), ]
+# avg_clust = avg_clust[order(avg_clust[,"3"], decreasing = T), ]
+avg_clust = avg_clust[order(avg_clust[,"2"], decreasing = T), ]
 
 
 print(xtable(avg_clust, 
@@ -253,8 +254,28 @@ ggsave(plot = last_plot(), filename  = 'results/dendo_clust.jpg',
        width = 10,
        limitsize = FALSE)
 
+# clusters e indice # ncesita df de pca.R
+clus_index = clust.df %>%  
+  left_join(findex_df , by = c('label' = 'Country.Name'))
 
+clus_index %>% 
+  dplyr::group_by(cluster) %>% 
+  dplyr::summarise(mean(Findex))
 
+clus_index %>% 
+  ggplot( aes(x=Findex, fill=cluster)) +
+  geom_histogram( color="#e9ecef", alpha=0.6, position = 'identity') +
+  # scale_fill_manual(values=c("#69b3a2", "#404080")) +
+  # theme_ipsum() +
+  labs(fill="")
+table(clus_index$cluster)
+
+print(xtable(clus_index, 
+             caption = '',
+             label = "table:avg_clust"), 
+      include.rownames = F)  
+
+tapply(clus_index$Findex, clus_index$cluster, summary)
 
 ##########################
 jpeg('results/hclust.jpg')
