@@ -265,9 +265,12 @@ clus_index %>%
 clus_index %>% 
   ggplot( aes(x=Findex, fill=cluster)) +
   geom_histogram( color="#e9ecef", alpha=0.6, position = 'identity') +
-  # scale_fill_manual(values=c("#69b3a2", "#404080")) +
+  scale_fill_manual(values=c("#69b3a2", "#404080")) +
   # theme_ipsum() +
-  labs(fill="")
+  labs(fill="")+
+  theme(axis.title = element_blank(),
+        legend.position = 'bottom')
+ggsave('results/findex_hist.jpg', width = 4, height = 4)
 table(clus_index$cluster)
 
 print(xtable(clus_index, 
