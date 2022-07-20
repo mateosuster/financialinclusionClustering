@@ -3,6 +3,10 @@ rm( list=ls() )  #remove all objects
 gc()             #garbage collection
 
 require(tidyverse)
+library(ggbiplot)
+library(ggrepel)
+
+
 
 # setwd('/home/mateo1/repos/financialinclusionClustering')
 setwd('C:/Users/mateo/Documents/repos/financialinclusionClustering')
@@ -15,6 +19,9 @@ glimpse(dataset)
 
 data = dataset[, 4:ncol(dataset) ]
 index = dataset[, 1:3]
+
+
+
 
 # select an imputer
 data_imp = data %>%
@@ -83,11 +90,15 @@ wcp_df
 
 
 # DF wPC and country
-findex_df =data.frame(cbind("Country.Name" = dataset[dataset$imputer== "MICE-BayesianRidge", "Country.Name"],  
-                "Findex"=  as.double(rowSums(wcp_df)/sum(autovalores_corr)) )) %>% 
+findex_df =data.frame(cbind("Country.Name" = 
+                              dataset[dataset$imputer== "MICE-BayesianRidge", "Country.Name"],  
+                            "Findex"=  
+                              as.double(rowSums(wcp_df)/sum(autovalores_corr)) )) %>% 
   mutate(Findex =as.double(Findex))
                 
 findex_df %>% arrange(-Findex)
+
+library(devtools)
 
 # biplot
 ggbiplot(datos.pc, obs.scale=1 ) + 

@@ -1,19 +1,28 @@
-require("data.table")
-require("randomForest")
-require(tidyverse)
-require(cluster)    # clustering algorithms
-require(factoextra) # clustering visualization  
 
 #limpio la memoria
 rm( list=ls() )  #remove all objects
 gc()             #garbage collection
 
+# require("data.table")
+require("randomForest")
+require(tidyverse)
+require(cluster)    # clustering algorithms
+require(factoextra) # clustering visualization  
+library(xtable)
+
+
 # setwd('/home/mateo1/repos/financialinclusionClustering')
 setwd('C:/Users/mateo/Documents/repos/financialinclusionClustering')
 
 #leo el dataset , aqui se puede usar algun super dataset con Feature Engineering
-dataset <- read.csv('results/data_imputada.csv') 
+dataset <- read.csv('results/data_imputada.csv') %>% 
+  na.omit() 
 glimpse(dataset)
+
+# dataset %>% 
+#   filter(imputer == "Sin imputación") %>% 
+#   na.omit() %>% 
+#   nrow()
 
 data = dataset[, 4:ncol(dataset) ]
 # row.names(data) = index$Country.Code
@@ -33,6 +42,7 @@ corr_coph = list()
 
 df_corr_coph <- data.frame(imputer = numeric(0),    # Create empty data frame
                            corr_coph = numeric(0) )
+
 
 df_sil <- data.frame(matrix(ncol = 3, nrow = 0))
 colnames(df_sil) <- c("imputer", "ncluster", "avg_sil")
@@ -90,6 +100,8 @@ df_corr_coph <- df_corr_coph %>%
   mutate(corr_coph = as.double(corr_coph)) %>% 
   arrange(-corr_coph)
 write_delim(df_corr_coph, file = "results/cophenetic_corr.csv", delim = "&")
+print(xtable(df_corr_coph), include.rownames = F)
+
 
 #grafico silhoutte
 df_sil  %>% 
@@ -122,17 +134,19 @@ for(imputer_i in unique(data$imputer)){
 require(NbClust)
 Nb_list = list()
 for(imputer_i in unique(data$imputer)){
-  cat(imputer_i)
-  
-  
-  Nb_list[[imputer_i]] = NbClust(data = data %>%
-                                   filter(imputer== imputer_i )  %>%
-                                   select(-c(imputer)),
-                                 diss = dist_list[[imputer_i]], 
-                                distance = NULL,
-                              min.nc = 2, max.nc = 15,
-                              method = "ward.D2") 
+  if (imputer_i != "Sin imputación"){
     
+    cat(imputer_i)
+    
+    
+    Nb_list[[imputer_i]] = NbClust(data = data %>%
+                                     filter(imputer== imputer_i )  %>%
+                                     select(-c(imputer)),
+                                   diss = dist_list[[imputer_i]], 
+                                  distance = NULL,
+                                min.nc = 2, max.nc = 15,
+                                method = "ward.D2")
+  }
 }
 Nb_list[['Complete']]$All.index
 
@@ -168,24 +182,51 @@ country_cluster_df = data_all %>%
   arrange(-sd)
 # sum(country_cluster_df$prop)
 
-country_cluster_table = as.data.frame.matrix(table(data_all$Country.Name, data_all$cluster) )
+# as.data.frame(country_cluster_df) %>% 
+#   select(Country.Name, n, cluster) %>% 
+#   pivot_wider(id_cols = Country.Name,
+#               names_from = n,
+#               values_from = cluster)
+
+
+country_cluster_table = as.data.frame.matrix(table(data_all$Country.Name, data_all$cluster) ) %>%
+  as.data.frame() %>% 
+  tibble::rownames_to_column() %>% 
+  ungroup() #%>% 
+  # dplyr::arrange(3, .by_group = TRUE)
+
+# country_cluster_table = country_cluster_table[order(country_cluster_table[,"3"], decreasing = T), ]
+country_cluster_table = country_cluster_table[order(country_cluster_table[,"2"], decreasing = T), ]
+
+
+print(xtable(country_cluster_table, tabular.environment="longtable"
+             , caption  = 'Frecuencia de asignación de los países a cada clúster según las distintas técnicas de imputación de datos faltantes'
+             ,label= 'table:country_clust'), include.rownames = F      )
 
 
 # estadisticas descriptivas por cluster
-data_all %>% 
+avg_clust  = data_all %>% 
   group_by(cluster) %>%
-  summarise_all(.funs = mean)
+  summarise_all(.funs = mean) %>% 
+  select(cluster, 6:ncol(.)-1)  %>% 
+  reshape2::melt(id.var = 'cluster') %>% 
+  pivot_wider(names_from = 'cluster') #%>% 
+  # dplyr::arrange('3')
+avg_clust = avg_clust[order(avg_clust[,"3"], decreasing = T), ]
 
 
-  
-
+print(xtable(avg_clust, 
+             caption = "Valores promedios para los clústers encontrados a partir de todos los métodos de imputación",
+             label = "table:avg_clust"), 
+      include.rownames = F)
 
 ###### PLOTS ##########
 library(ggdendro)
 library(dendextend)
 
 # hca    = hclust_list[['MICE-LinearRegression']]
-hca    = hclust_list[['MICE-RandomForest']]
+# hca    = hclust_list[['MICE-RandomForest']]
+hca    = hclust_list[['MICE-BayesianRidge']]
 # hca    = hclust_list[['Complete']]
 # hca    = hclust_list[['HotDeck']]
 clust <- cutree(hca,k=optimal_cluster)  # k clusters
